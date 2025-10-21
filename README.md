@@ -33,7 +33,7 @@ This project was developed as part of a multi-day coding series to strengthen sk
 ## How to Run
 1. Clone or download the project:
    ```bash
-   ```git clone https://github.com/<juanv8964>/SimpleCalculator.git```
+   ```git clone https://github.com/juanv8964/SimpleCalculator.git```
 **Compile the code:**
    ```javac simpleCalculator.java```
    ```java simpleCalculator```
