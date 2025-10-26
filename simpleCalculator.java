@@ -1,13 +1,10 @@
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 public class simpleCalculator {
 public static void main(String[] args) {
+Calculate calc = new Calculate();
+Settings userSettings = new Settings();
+HistoryManager manager = new HistoryManager();
 Scanner input = new Scanner(System.in);
 int opsCount = 0;
 int[] invalidInputs = {0};
@@ -17,31 +14,14 @@ double num1;
 double num2;
 double result = 0;
 double memory = 0;
-int precision = 2;
-String formatPattern = "%." + precision + "f";
+String format = userSettings.getFormatPattern();
 boolean memorySet = false;
-ArrayList<String> history = new ArrayList<>();
 System.out.println("=== Simple Calculator ===");
-File historyFile = new File("history.txt");
-if (historyFile.exists())
-{
-    try(BufferedReader reader = new BufferedReader(new FileReader(historyFile))){
-        String line;
-        while ((line = reader.readLine()) != null) {
-            history.add(line);
-            
-        }
-        System.out.println("you have loaded in " + history.size() + " history entries");
-        System.out.println();
-    }
-    catch(IOException e){
-        System.out.println("Error loading history");
-    }
-}
+manager.loadHistory();
 int choice;
 char continueoperation ='y';
 while(continueoperation =='y'){
-System.out.println("Status - Memory: " + memory + " | " + "History: " + history.size() + " | " + "Precision: " + precision + " Decimals");
+System.out.println("Status - Memory: " + memory + " | " + "History: " + manager.getHistorySize() + " | " + "Precision: " + userSettings.getPrecision() + " Decimals");
 System.out.println();
 System.out.println("====== BASIC OPERATIONS ======");
 System.out.println("1. Add");
@@ -66,42 +46,50 @@ System.out.println("13. Clear history");
 System.out.println("14. Save history to file");
 System.out.println("15. Clear all (file + memory)");
 System.out.println();
+System.out.println("====== SCIENTIFIC OPERATIONS ======");
+System.out.println("16. Sine");
+System.out.println("17. Cosine");
+System.out.println("18. Tangent");
+System.out.println("19. Logarithm");
+System.out.println("20. Exponential");
+System.out.println("21. Factorial");
+System.out.println();
 System.out.println("==== SETTINGS ====");
-System.out.println("16. Change decimal precision");
-System.out.println("17. Exit");
-choice = readMenu(input, "Choose your option: 1 - 17 >> ", invalidInputs);
+System.out.println("22. Change decimal precision");
+System.out.println("23. Exit");
+choice = readMenu(input, "Choose your option: 1 - 23 >> ", invalidInputs);
 switch (choice) {
     case 1:
     num1 = readDouble(input, "Enter first number >> ", invalidInputs);
     num2 = readDouble(input, "Enter second number >> ",invalidInputs);
-    result = addNumbers(num1, num2);
+    result = calc.addNumbers(num1, num2);
     System.out.println("your answer is >> " + result);
-    history.add(String.format(formatPattern + " + " + formatPattern + " = " +  formatPattern, num1, num2, result));
+    manager.addEntry(String.format(format + " + " + format + " = " +  format, num1, num2, result));
     ++opsCount;
     break;
     case 2:
     num1 = readDouble(input, "Enter first number >> ", invalidInputs);
     num2 = readDouble(input, "Enter second number >> ",invalidInputs);
-    result = subtractNumbers(num1, num2);
+    result = calc.subtractNumbers(num1, num2);
     System.out.println("your answer is >> " + result);
-    history.add(String.format(formatPattern + " - " + formatPattern + " = " +  formatPattern, num1, num2, result));
+    manager.addEntry(String.format(format + " - " + format + " = " +  format, num1, num2, result));
     ++opsCount;
     break;
     case 3:
     num1 = readDouble(input, "Enter first number >> ", invalidInputs);
     num2 = readDouble(input, "Enter second number >> ", invalidInputs);
-    result = multiplyNumbers(num1, num2);
+    result = calc.multiplyNumbers(num1, num2);
     System.out.println("your answer is >> " + result);
-    history.add(String.format(formatPattern + " * " + formatPattern + " = " +  formatPattern, num1, num2, result));
+    manager.addEntry(String.format(format + " * " + format + " = " +  format, num1, num2, result));
     ++opsCount;
     break;
     case 4:
     num1 = readDouble(input, "Enter first number >> ", invalidInputs);
     num2 = readDouble(input, "Enter second number >> ", invalidInputs);
     try {  
-    result = divideNumbers(num1, num2);
+    result = calc.divideNumbers(num1, num2);
     System.out.println("your answer is >> " + result);
-    history.add(String.format(formatPattern + " / " + formatPattern + " = " +  formatPattern, num1, num2, result));
+    manager.addEntry(String.format(format + " / " + format + " = " +  format, num1, num2, result));
     ++opsCount;
     break;
     }
@@ -112,9 +100,9 @@ switch (choice) {
     case 5:
     try {
     num1 = readDouble(input, "Enter a number >> ", invalidInputs);
-    result = squareRoot(num1);
+    result = calc.squareRoot(num1);
     System.out.println("your answer is >> " + result);
-    history.add(String.format("√" + formatPattern + " = " + formatPattern , num1, result));
+    manager.addEntry(String.format("√" + format + " = " + format , num1, result));
     ++opsCount;
     break;
     }
@@ -126,9 +114,9 @@ switch (choice) {
     try {
     num1 = readDouble(input, "Enter the base >> ", invalidInputs);
     num2 = readDouble(input, "Enter the exponent >> ", invalidInputs);
-    result = powerNumbers(num1, num2);
+    result = calc.powerNumbers(num1, num2);
     System.out.println("Your answer is >> " + result);
-    history.add(String.format(formatPattern + " ^ " + formatPattern + " = " + formatPattern , num1, num2, result));
+    manager.addEntry(String.format(format + " ^ " + format + " = " + format , num1, num2, result));
     ++opsCount;
     break;
     }
@@ -140,9 +128,9 @@ switch (choice) {
     try {
     num1 = readDouble(input, "Enter first number >> ", invalidInputs);
     num2 = readDouble(input, "Enter second number >> ", invalidInputs);
-    result = modulusNumbers(num1, num2);
+    result = calc.modulusNumbers(num1, num2);
     System.out.println("Your answer is >> " + result);
-    history.add(String.format(formatPattern + " %% " + formatPattern + " = " +  formatPattern, num1, num2, result));
+    manager.addEntry(String.format(format + " %% " + format + " = " +  format, num1, num2, result));
     ++opsCount;
     break;
     }
@@ -152,9 +140,9 @@ switch (choice) {
     }
     case 8:
     num1 = readDouble(input, "Enter a number >> ", invalidInputs);
-    result = absoluteNumbers(num1);
+    result = calc.absoluteNumbers(num1);
     System.out.println("Your answer is >> " + result);
-    history.add(String.format("|" + formatPattern + "| =" + formatPattern, num1, result));
+    manager.addEntry(String.format("|" + format + "| =" + format, num1, result));
     ++opsCount;
     break;
     case 9:
@@ -179,36 +167,25 @@ switch (choice) {
     System.out.println("Memory has successfuly been cleared: " + memory);
     break;
     case 12:
-    if (history.isEmpty()) {
+    if (manager.isEmpty()) {
         System.out.println("Error. There is nothing to view inside of history");
         break;
     }
-    System.out.println(String.join("\n", history));
+    System.out.println(String.join("\n", manager.getHistory()));
     break;
     case 13:
-    if (history.isEmpty()) {
+    if (manager.isEmpty()) {
         System.out.println("Error. There is nothing to clear inside of history");
         break;
     }
-    history.clear();
-    System.out.println("Your history has been erased.");
+    manager.clearHistory();
     break;
     case 14:
-    if (history.isEmpty()) {
-        System.out.println("Error. No history to save.");
+    if (manager.isEmpty()) {
         break;
     }
-    try (BufferedWriter buffer = new BufferedWriter(new FileWriter("history.txt", true)))
-    {
-    for (String entry : history){
-        buffer.write(entry + "\n");
-    }
-    System.out.println("History successfully saved to history.txt");
+    manager.saveHistoryFile();
     historySavedThisRun = true;
-    }
-    catch(IOException e) {
-        System.out.println("Error saving history: " + e.getMessage());
-    }
     break;
     case 15:
     char y;
@@ -217,37 +194,77 @@ switch (choice) {
         if (y != 'y') {
             break;
         }
-    if (!historyFile.exists()) {
-        System.out.println("The file does not exist");
-        break;
-    }
-    if(historyFile.length() ==0){
-        System.out.println("Error. The file is empty. nothing to clear");
-        break;
-    }
-    try(FileWriter files = new FileWriter(historyFile))
-    {
-        System.out.println("History text file has been cleared.");
-    }
-    catch(IOException e)
-    {
-        System.out.println("Error loading." + e);
-    }
-    System.out.println("Sucessfully cleared history file.");
-    history.clear();
+    manager.clearFile();
+    manager.clearHistory();
+    memory = 0;
+    memorySet = false;
     break;
     case 16:
-    System.out.print("Choose your decimal precision >> ");
-    precision = input.nextInt();
-    if (precision < 0 || precision > 4) {
-        System.out.println("Precision must be between 1 and 4. Try again");
-        break;
-    }
-    formatPattern = "%." + precision + "f";
-    System.out.println("Your precision has been changed to: " + precision);
+    num1 = readDouble(input, "Enter angle in degrees >> ", invalidInputs);
+    result = calc.sin(num1);
+    System.out.println("Your answer is >> " + result);
+    manager.addEntry(String.format("sin(" + format + ") = " + format, num1, result));
+    ++opsCount;
     break;
     case 17:
-    sessionSummary(sessionStart, opsCount, invalidInputs, history, memory, historySavedThisRun);
+    num1 = readDouble(input, "Enter angle in degrees >> ", invalidInputs);
+    result = calc.cos(num1);
+    System.out.println("Your answer is >> " + result);
+    manager.addEntry(String.format("cos(" + format + ") = " + format, num1, result));
+    ++opsCount;
+    break;
+    case 18:
+    num1 = readDouble(input, "Enter angle in degrees >> ", invalidInputs);
+    result = calc.tan(num1);
+    System.out.println("Your answer is >> " + result);
+    manager.addEntry(String.format("tan(" + format + ") = " + format, num1, result));
+    ++opsCount;
+    break;
+    case 19:
+    num1 = readDouble(input, "Enter a positive number >> ", invalidInputs);
+    try {
+    result = calc.log(num1);
+    System.out.println("Your answer is >> " + result);
+    manager.addEntry(String.format("log(" + format + ") = + " + format, num1, result));
+    ++opsCount;
+    }
+    catch(IllegalArgumentException e){
+        System.out.println("Error: " + e.getMessage());
+    }
+    break;
+    case 20:
+    num1 = readDouble(input, "Enter a number >> ", invalidInputs);
+    result = calc.exp(num1);
+    System.out.println("Your answer is >> " + result);
+    manager.addEntry(String.format("exp(" + format + ") = " + format, num1, result));
+    ++opsCount;
+    break;
+    case 21:
+    num1 = readDouble(input, "Enter a non-negative number >> ", invalidInputs);
+    try{
+        result = calc.factorial((int) num1);
+        System.out.println("Your answer is >> " + result);
+        manager.addEntry(String.format("%.0f! = %.0f", num1, result));
+        ++opsCount;
+    }
+    catch (IllegalArgumentException e)
+    {
+        System.out.println("Error: " + e.getMessage());
+    }
+    break;
+    case 22:
+    System.out.print("Choose your decimal precision >> ");
+    int p = input.nextInt();
+    try{
+    userSettings.setPrecision(p);
+    System.out.println("Your precision has been changed to: " + userSettings.getPrecision());
+    }
+    catch(IllegalArgumentException e){
+        System.out.println("Invalid precision. " + e.getMessage());
+    }
+    break;
+    case 23:
+    sessionSummary(sessionStart, opsCount, invalidInputs, manager.getHistory(), memory, historySavedThisRun);
     input.close();
     return;
     default:
@@ -269,71 +286,12 @@ while (true) {
 }
 if(continueoperation == 'n')
 {
-    sessionSummary(sessionStart, opsCount, invalidInputs, history, memory, historySavedThisRun);
+    sessionSummary(sessionStart, opsCount, invalidInputs, manager.getHistory(), memory, historySavedThisRun);
     break;
 }
 }
 }
-public static double addNumbers(double num1, double num2 )
-{
-    double result;
-    result = num1 +num2;
-    return result;
-}
-public static double subtractNumbers(double num1, double num2)
-{
-    double result;
-    result = num1 - num2;
-    return result;
-}
-public static double multiplyNumbers(double num1, double num2)
-{
-    double result;
-    result = num1 * num2;
-    return result;
-}
-public static double divideNumbers(double num1, double num2)
-{
-    if (num2 ==0){
-        throw new ArithmeticException("Cannot divide by zero");
-    }
-    double result;
-    result = num1 / num2;
-    return result;
-}
-public static double squareRoot(double num1)
-{
-    if (num1 < 0){
-        throw new IllegalArgumentException("Cannot take square root of a negative number");
-    }
-    double result;
-    result = Math.sqrt(num1);
-    return result;
-}
-public static double powerNumbers(double num1, double num2)
-{
-    double result;
-    result = Math.pow(num1, num2);
-    if (Double.isNaN(result)){
-        throw new IllegalArgumentException("Result is not a real number. ");
-    }
-    return result;
-}
-public static double modulusNumbers(double num1, double num2)
-{
-    if (num2 == 0){
-        throw new ArithmeticException("Cannot mod a number by 0");
-    }
-    double result;
-    result = num1 % num2;
-    return result;
-}
-public static double absoluteNumbers(double num1)
-{
-    double result;
-    result = Math.abs(num1);
-    return result;
-}
+
 
 public static double readDouble(Scanner input, String prompt, int [] invalidInputs)
 {   while (true) {
@@ -379,7 +337,7 @@ public static int readMenu(Scanner input, String prompt, int [] invalidInputs)
     }
     value = input.nextInt();
     input.nextLine();
-    if(value < 1 || value > 17){
+    if(value < 1 || value > 23){
     System.out.println("Invalid input try again.");
     invalidInputs[0]++;
     continue;
